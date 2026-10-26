@@ -1,0 +1,15 @@
+{
+  "short_name": "video-chat-app",
+  "name": "video-chat-app - portfolio demo",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0E141B",
+  "background_color": "#0E141B"
+}

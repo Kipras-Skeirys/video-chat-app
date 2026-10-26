@@ -1,0 +1,3 @@
+# Local portfolio demo - not intended for indexing
+User-agent: *
+Disallow: /
