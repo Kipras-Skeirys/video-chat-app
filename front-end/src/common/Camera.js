@@ -1,5 +1,6 @@
 import { LocalStreamContext } from '../App'
 import { useState, useRef, useEffect, useContext } from "react"
+import { createFakeMediaStream } from './fakeMediaStream'
 
 function describeMediaError(err) {
     switch (err && err.name) {
@@ -42,6 +43,7 @@ function Camera(props) {
     const [ facingMode, setFacingMode ] = useState(true)
     const [ mute, setMute ] = useState(sessionStorage.getItem('mute') !== 'undefined' ? JSON.parse(sessionStorage.getItem('mute')) : false)
     const [ mediaError, setMediaError ] = useState()
+    const [ isFakeCamera, setIsFakeCamera ] = useState(false)
 
 
     // Props
@@ -74,14 +76,7 @@ function Camera(props) {
                     // height: { ideal: 1080 }
                 })
             .then(stream => {
-                const [ audioTrack ] = stream.getAudioTracks()
-                if (sessionStorage.getItem('mute') === 'undefined') {
-                    sessionStorage.setItem('mute', false)
-                    setMute(false)
-                } else if (audioTrack) {
-                    audioTrack.enabled = !mute
-                }
-                setLocalStream(stream)
+                applyStream(stream)
                 if (callback) {
                     callback(stream)
                 }
@@ -95,6 +90,24 @@ function Camera(props) {
                 }
             })
 
+    }
+
+    // Applies the saved mute state and hands the stream to the rest of the app
+    function applyStream(stream) {
+        const [ audioTrack ] = stream.getAudioTracks()
+        if (sessionStorage.getItem('mute') === 'undefined') {
+            sessionStorage.setItem('mute', false)
+            setMute(false)
+        } else if (audioTrack) {
+            audioTrack.enabled = !mute
+        }
+        setLocalStream(stream)
+    }
+
+    function startFakeCamera() {
+        setMediaError(null)
+        setIsFakeCamera(true)
+        applyStream(createFakeMediaStream())
     }
 
     function muteToggle() {
@@ -181,6 +194,8 @@ function Camera(props) {
                 <div className="request-camera-cont">
                     <div className="request-camera-button-cont">
                         <input type="button" value={mediaError ? 'Try Again' : 'Request Camera Access'} className="request-camera-button" onClick={() => initLocalStream()}/>
+                        <span>or</span>
+                        <input type="button" value="Use Test Camera" className="request-camera-button" onClick={() => startFakeCamera()}/>
                         { mediaError ? <p className="camera-error" role="alert">{mediaError}</p> : null }
                     </div>
                 </div>
@@ -197,7 +212,7 @@ function Camera(props) {
                         null
                     }
                     { mediaNotice ? <p className="camera-notice" role="status">{mediaNotice}</p> : null }
-                    { facingMode
+                    { facingMode && !isFakeCamera
                         ?
                         <div className="rotate-camera-cont" onClick={(e) => { facingModeToggle(e) }}>
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="17.5" viewBox="0 0 20 17.5"><defs></defs><path d="M5.824,33.281,5.418,34.5H2.5A2.5,2.5,0,0,0,0,37V47a2.5,2.5,0,0,0,2.5,2.5h15A2.5,2.5,0,0,0,20,47V37a2.5,2.5,0,0,0-2.5-2.5H14.582l-.406-1.219A1.87,1.87,0,0,0,12.4,32H7.6A1.87,1.87,0,0,0,5.824,33.281ZM15,40.75a.627.627,0,0,1-.625.625h-3a.442.442,0,0,1-.312-.754l.926-.926a2.829,2.829,0,0,0-4,.012l-.77.77A.936.936,0,0,1,5.9,39.152l.77-.77a4.706,4.706,0,0,1,6.648-.016l.926-.926a.442.442,0,0,1,.754.312ZM5,43.25a.627.627,0,0,1,.625-.625h3a.442.442,0,0,1,.312.754l-.926.926a2.829,2.829,0,0,0,4-.012l.77-.77A.936.936,0,1,1,14.1,44.848l-.77.77a4.706,4.706,0,0,1-6.648.016l-.926.926A.442.442,0,0,1,5,46.246Z" transform="translate(0 -32)"/></svg>
